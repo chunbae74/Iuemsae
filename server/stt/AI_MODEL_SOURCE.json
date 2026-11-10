@@ -1,0 +1,62 @@
+{
+  "archive": "AI 모델 소스코드.zip / 4_인식모델.zip",
+  "files": [
+    {
+      "source": "kosr/model/feature_extractor.py",
+      "source_sha256": "e2b88948a664fe29294f088f76045e7416fe620d0d727f0f4776145b842c0296",
+      "target": "server/stt/ieumsae_stt/asr/nia/feature_extractor.py",
+      "classes": [
+        "VGGExtractor"
+      ]
+    },
+    {
+      "source": "kosr/model/attention.py",
+      "source_sha256": "98618532050161ece93a42157bf63a85823acdc98f29c7ab13fecf153a14a74a",
+      "target": "server/stt/ieumsae_stt/asr/nia/attention.py",
+      "classes": [
+        "MultiHeadAttention"
+      ]
+    },
+    {
+      "source": "kosr/model/transformer/encoder.py",
+      "source_sha256": "17345da126cf799bc38e20c3e62c0df8051e86c8bc5d66205ddadf5e79d794e5",
+      "target": "server/stt/ieumsae_stt/asr/nia/encoder.py",
+      "classes": [
+        "EncoderLayer",
+        "Encoder"
+      ]
+    },
+    {
+      "source": "kosr/model/transformer/decoder.py",
+      "source_sha256": "c7bcf283c816fdc6c7560abc3c61c8c9b003a77a3cf682a9caa5a5542e79416c",
+      "target": "server/stt/ieumsae_stt/asr/nia/decoder.py",
+      "classes": [
+        "DecoderLayer",
+        "Decoder"
+      ]
+    },
+    {
+      "source": "kosr/model/transformer/sub_layer.py",
+      "source_sha256": "57222ffd9f737e518d8d1b746dd62169c1c02378cf789780c8778ce3da5b3de8",
+      "target": "server/stt/ieumsae_stt/asr/nia/sub_layer.py",
+      "classes": [
+        "PositionalEncoding",
+        "LayerNorm",
+        "FeedForwardNetwork"
+      ]
+    }
+  ],
+  "configuration_source": "kosr/config/ksponspeech_transformer_base.yaml",
+  "configuration_sha256": "6cdc51809147b3cbf822b9907db956f5eebdd91d0d7bb4e1eac2116ce9916bde",
+  "vocabulary": {
+    "source": "kosr/utils/kspon_labels.json",
+    "sha256": "a0eb54c73b3b96ac4f3b025cbcde0c72d9e1008d8e9ddd6e39b6edff38da3da2",
+    "tokens": 2308
+  },
+  "checkpoint_validation": {
+    "source": "kosr/checkpoint/best_wer.pth",
+    "project": "server/stt/models/ieumsae_stt.pt",
+    "state_dict_tensors": 367,
+    "all_tensors_equal": true
+  }
+}

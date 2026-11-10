@@ -1,0 +1,9 @@
+secrets/
+.dev/
+.venv/
+.env
+.env.*
+stt/models/
+**/__pycache__/
+**/*.pyc
+.git/

@@ -1,0 +1,151 @@
+name: ieumsae
+
+services:
+  gateway:
+    image: nginx:stable-alpine@sha256:0e52bd054126cdc040b1276c0af347aeb02a41b9cfe305d6094767ac30e97949
+    depends_on: [auth, stt]
+    read_only: true
+    tmpfs: [/var/cache/nginx, /var/run, /tmp]
+    ports:
+      - "443:443"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - runtime_tls:/etc/nginx/tls:ro
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    restart: unless-stopped
+
+  auth:
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:?required}
+      AUTH_DATABASE_URL: postgresql+asyncpg://ieumsae@db:5432/ieumsae
+      AUTH_DB_PASSWORD_FILE: /run/secrets/db_password
+      AUTH_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_private
+      AUTH_EMAIL_PEPPER_FILE: /run/secrets/email_pepper
+      AUTH_PROFILE_KEY_FILE: /run/secrets/profile_key
+      AUTH_SMTP_HOST: ${AUTH_SMTP_HOST:?required}
+      AUTH_SMTP_PORT: ${AUTH_SMTP_PORT:-587}
+      AUTH_SMTP_STARTTLS: "true"
+      AUTH_SMTP_USER: ${AUTH_SMTP_USER:?required}
+      AUTH_SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      AUTH_MAIL_FROM: ${AUTH_MAIL_FROM:?required}
+      AUTH_INTEGRITY_SERVICE_ACCOUNT_FILE: /run/secrets/integrity_account
+      AUTH_ANDROID_SIGNING_CERT_SHA256: ${AUTH_ANDROID_SIGNING_CERT_SHA256:?required}
+      AUTH_ATTESTATION_ROOTS_DIR: /attestation_roots
+    volumes:
+      - ./auth/attestation_roots:/attestation_roots:ro
+      - runtime_auth:/run/secrets:ro
+    read_only: true
+    cap_drop: [ALL]
+    tmpfs: [/tmp]
+    networks: [default, database]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    restart: unless-stopped
+
+  stt:
+    build:
+      context: .
+      dockerfile: stt/Dockerfile
+    environment:
+      STT_AUTH_STATUS_URL: ${STT_AUTH_STATUS_URL:?required}
+      STT_MODEL_PATH: /models/ieumsae_stt.pt
+      STT_DEVICE: ${STT_DEVICE:-auto}
+
+      STT_MODEL_SHA256: ${STT_MODEL_SHA256:?required}
+      STT_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public
+      STT_SIGNING_KEY_FILE: /run/secrets/stt_signing
+      STT_TTS_PROVIDER: elevenlabs
+      STT_ELEVENLABS_API_KEY_FILE: /run/secrets/elevenlabs_api_key
+      STT_ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:?required}
+      STT_ELEVENLABS_MODEL_ID: ${ELEVENLABS_MODEL_ID:?required}
+      STT_SIGNING_KEY_ID: ${STT_SIGNING_KEY_ID:?required}
+      STT_SIGNING_KEY_NOT_AFTER: ${STT_SIGNING_KEY_NOT_AFTER:?required}
+    volumes:
+      - ./stt/models:/models:ro
+      - runtime_stt:/run/secrets:ro
+
+    read_only: true
+    cap_drop: [ALL]
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
+    environment:
+      POSTGRES_USER: ieumsae
+      POSTGRES_DB: ieumsae
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    networks: [database]
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - runtime_db:/run/secrets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ieumsae -d ieumsae"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    restart: unless-stopped
+
+  secret-loader:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
+    entrypoint: [python, /app/secret_loader.py]
+    user: "0"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    logging:
+      driver: none
+    volumes:
+      - runtime_auth:/staging/auth
+      - runtime_stt:/staging/stt
+      - runtime_db:/staging/db
+      - runtime_tls:/staging/tls
+
+  secret-memory:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
+    entrypoint: [python, -c, "import time; time.sleep(2147483647)"]
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    logging:
+      driver: none
+    volumes:
+      - runtime_auth:/staging/auth:ro
+      - runtime_stt:/staging/stt:ro
+      - runtime_db:/staging/db:ro
+      - runtime_tls:/staging/tls:ro
+
+volumes:
+  dbdata:
+  runtime_auth:
+    driver_opts: {type: tmpfs, device: tmpfs, o: "size=2m,mode=0755,noswap,nodev,nosuid,noexec"}
+  runtime_stt:
+    driver_opts: {type: tmpfs, device: tmpfs, o: "size=2m,mode=0755,noswap,nodev,nosuid,noexec"}
+  runtime_db:
+    driver_opts: {type: tmpfs, device: tmpfs, o: "size=2m,mode=0755,noswap,nodev,nosuid,noexec"}
+  runtime_tls:
+    driver_opts: {type: tmpfs, device: tmpfs, o: "size=2m,mode=0755,noswap,nodev,nosuid,noexec"}
+
+networks:
+  database:
+    internal: true

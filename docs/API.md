@@ -1,13 +1,6 @@
-# API 명세
+# API 명세서
 
-## 공통 사항
-
-- 기본 주소는 앱의 `API_BASE_URL`에 설정한 HTTPS 호스트입니다.
-- JSON 요청은 `Content-Type: application/json`을 사용하며, 정의되지 않은 필드가 포함되면 요청을 거부합니다.
-- 인증 조건 표기
-  - **공개**: 로그인 토큰 불필요 (이메일 코드 등 별도의 증명은 필요할 수 있음)
-  - **Bearer**: `Authorization: Bearer <accessToken>`
-  - **기기 서명**: Bearer + 등록된 기기의 서명 헤더
+본 서비스에서 제공하는 API의 요청 응답 및 인증 조건은 다음과 같습니다.
 
 ## 계정, 기기, 사용자
 

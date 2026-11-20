@@ -3,7 +3,7 @@
 <h1>🗣️ 이음새</h1>
 <h3>구음장애인을 위한 새로운 대화 창구</h3>
 
-<p>나의 목소리가 상대에게 닿을 수 있도록,<br>음성을 글자로 바꾸고 감정을 담아 읽어 주는 대면 의사소통 서비스</p>
+<p>이음새는 구음장애인이 목소리를 포기하지 않고도 자연스럽게 소통할 수 있도록 도와주는 서비스입니다.</p>
 
 <p>
   <img src="https://img.shields.io/badge/Android-10%2B-3DDC84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Android 10 이상">

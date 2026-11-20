@@ -18,7 +18,7 @@
   <a href="#features">주요 기능</a> ,
   <a href="#architecture">시스템 구조</a> ,
   <a href="#security">보안 설계</a> ,
-  <a href="#quick-start">실행 방법</a> ,
+  <a href="#quick-start">실행 방법</a>
 </p>
 
 </div>

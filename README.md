@@ -93,7 +93,7 @@
 <a id="architecture"></a>
 
 ## 🏗️ 시스템 구조
-![시스템구조](/img/architecture.jpg)
+![시스템구조](docs/img/architecture.jpg)
 
 ### 음성인식 모델
 

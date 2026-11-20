@@ -1,6 +1,7 @@
 package kr.ieumsae.app.stt
 
 import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +31,8 @@ import java.util.Arrays
 import java.util.concurrent.atomic.AtomicBoolean
 
 class SttSecurityException : Exception("서버 서명을 확인하지 못했습니다")
+
+private const val TAG = "SttSession"
 
 
 class SttSession(
@@ -233,13 +236,20 @@ class SttSession(
     private suspend fun deleteQuietly(sessionId: String) {
         try {
             session.authed("DELETE", "/stt/session/$sessionId", signed = true)
-        } catch (_: ApiException) {
+        } catch (e: ApiException) {
             // The server also expires abandoned sessions; local wiping is independent.
-        } catch (_: java.security.GeneralSecurityException) {
+            logDeleteFailure(e)
+        } catch (e: java.security.GeneralSecurityException) {
             // A removed device key can prevent signing the best-effort deletion.
+            logDeleteFailure(e)
         } catch (e: IllegalStateException) {
             if (e is kotlinx.coroutines.CancellationException) throw e
+            logDeleteFailure(e)
         }
+    }
+
+    private fun logDeleteFailure(e: Exception) {
+        Log.w(TAG, "STT_SESSION_DELETE_FAILED reason=${e.javaClass.simpleName}")
     }
 }
 

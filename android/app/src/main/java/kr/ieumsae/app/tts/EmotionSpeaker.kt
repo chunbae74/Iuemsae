@@ -7,6 +7,7 @@ import android.media.MediaPlayer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Base64
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -43,6 +44,10 @@ class TtsSecurityException : Exception("서버 서명을 확인하지 못했습�
 
 
 class EmotionSpeaker(context: Context, private val session: Session) {
+    private companion object {
+        const val TAG = "EmotionSpeaker"
+    }
+
     enum class Engine { Expressive, Device }
 
     private val _speaking = MutableStateFlow(false)
@@ -72,16 +77,27 @@ class EmotionSpeaker(context: Context, private val session: Session) {
                 return Engine.Expressive
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: ApiException) {
-            } catch (_: IOException) {
-            } catch (_: SerializationException) {
-            } catch (_: GeneralSecurityException) {
-            } catch (_: IllegalArgumentException) {
-            } catch (_: IllegalStateException) {
+            } catch (e: ApiException) {
+                logFallback(e)
+            } catch (e: IOException) {
+                logFallback(e)
+            } catch (e: SerializationException) {
+                logFallback(e)
+            } catch (e: GeneralSecurityException) {
+                logFallback(e)
+            } catch (e: IllegalArgumentException) {
+                logFallback(e)
+            } catch (e: IllegalStateException) {
+                logFallback(e)
             }
         }
         speakOnDevice(text, emotion)
         return Engine.Device
+    }
+
+    // Expressive TTS failures fall back to the device engine; only the exception type is logged.
+    private fun logFallback(e: Exception) {
+        Log.w(TAG, "TTS_FALLBACK reason=${e.javaClass.simpleName}")
     }
 
     private suspend fun fetchExpressive(text: String, emotion: Emotion): ByteArray {
@@ -186,8 +202,9 @@ class EmotionSpeaker(context: Context, private val session: Session) {
             playback?.let {
                 try {
                     it.player.stop()
-                } catch (_: IllegalStateException) {
+                } catch (e: IllegalStateException) {
                     // A player that is still preparing can reject stop().
+                    Log.w(TAG, "TTS_STOP_REJECTED reason=${e.javaClass.simpleName}")
                 } finally {
                     release(it)
                 }

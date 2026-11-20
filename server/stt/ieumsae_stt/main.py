@@ -107,7 +107,8 @@ async def lifespan(app: FastAPI):
         try:
             await janitor
         except asyncio.CancelledError:
-            pass
+            # Expected: the janitor was cancelled above during shutdown.
+            log.debug("세션 정리 작업 종료")
         try:
             try:
                 await state.synth.close()

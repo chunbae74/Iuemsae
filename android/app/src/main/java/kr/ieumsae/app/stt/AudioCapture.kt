@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.util.Log
 import androidx.core.content.ContextCompat
 import kotlin.math.sqrt
 
@@ -16,6 +17,7 @@ class AudioCapture(private val context: Context) {
         const val SAMPLE_RATE = 16000
         const val BYTES_PER_SECOND = SAMPLE_RATE * 2
         private const val FRAME_BYTES = 640
+        private const val TAG = "AudioCapture"
 
         fun hasPermission(context: Context) =
             ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -57,8 +59,9 @@ class AudioCapture(private val context: Context) {
         record = null
         try {
             current.stop()
-        } catch (_: IllegalStateException) {
+        } catch (e: IllegalStateException) {
             // An unstarted or already stopped recorder still needs release().
+            Log.w(TAG, "RECORD_STOP_REJECTED reason=${e.javaClass.simpleName}")
         } finally {
             current.release()
         }

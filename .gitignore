@@ -8,6 +8,7 @@ server/SECRETS.md
 
 *.so
 
+.DS_Store
 
 .Python
 build/
